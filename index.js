@@ -389,10 +389,6 @@ async function connectToWhatsApp(botNumber, chatId) {
 }
 
 
-// -------( Fungsional Function Before Parameters )--------- \\
-
-
-//~Runtime🗑️🔧
 function formatRuntime(seconds) {
   const days = Math.floor(seconds / (3600 * 24));
   const hours = Math.floor((seconds % (3600 * 24)) / 3600);
@@ -519,6 +515,7 @@ async function getWhatsAppChannelInfo(link) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
 async function spamcall(target) {
   const sock = makeWASocket({
     printQRInTerminal: false,
@@ -648,14 +645,14 @@ const buffer1 = {
   }
 };
 
-let data;
+let stringifiedData;
 try {
-  data = JSON.stringify(buffer1, null, 2);
+  stringifiedData = JSON.stringify(buffer1, null, 2);
 } catch (stringifyErr) {
   console.error(stringifyErr.message);
 }
 
-const buffer = Buffer.from(data, 'utf8');
+const buffer = Buffer.from(stringifiedData, 'utf8');
 
 
 async function blankios(sock, target) {
@@ -1412,7 +1409,7 @@ X-Vaelix Infinity – 𝖲𝗎𝗉𝖾𝗋 – Speed
     console.error(err);
   }
 });
-    
+
 bot.onText(/\/xbugs (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const senderId = msg.from.id;
@@ -4256,11 +4253,11 @@ bot.onText(/\/cekrepo/, async (msg) => {
 
 console.log(`✅ Auto update siap. Repo: ${Owner}/${Repo} -> ${BranchPath}`);
 
-const data = {}
+const groupMenuData = {}
 
 function ensure(chatId) {
-  if (!data[chatId]) {
-    data[chatId] = {
+  if (!groupMenuData[chatId]) {
+    groupMenuData[chatId] = {
       welcome: { enabled: true, text: "Selamat datang {name}!", photo: null },
       rules: "Belum ada rules.",
       warns: {},
@@ -4291,10 +4288,10 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id
   ensure(chatId)
   const txt = msg.text || ""
-  if (msg.new_chat_members && data[chatId].welcome && data[chatId].welcome.enabled) {
+  if (msg.new_chat_members && groupMenuData[chatId].welcome && groupMenuData[chatId].welcome.enabled) {
     for (const u of msg.new_chat_members) {
       const name = u.username ? "@" + u.username : u.first_name
-      const caption = (data[chatId].welcome.text || "Welcome").replace(/\{name\}/g, name)
+      const caption = (groupMenuData[chatId].welcome.text || "Welcome").replace(/\{name\}/g, name)
       const buttons = {
         reply_markup: {
           inline_keyboard: [
@@ -4304,8 +4301,8 @@ bot.on("message", async (msg) => {
         }
       }
       try {
-        if (data[chatId].welcome.photo) {
-          await bot.sendPhoto(chatId, data[chatId].welcome.photo, { caption, ...buttons })
+        if (groupMenuData[chatId].welcome.photo) {
+          await bot.sendPhoto(chatId, groupMenuData[chatId].welcome.photo, { caption, ...buttons })
         } else {
           await bot.sendMessage(chatId, caption, buttons)
         }
@@ -4323,8 +4320,8 @@ bot.on("message", async (msg) => {
       await bot.sendMessage(chatId, "Memanggil admin:\n" + (mentions || "Tidak ada admin"))
     } catch {}
   }
-  if (txt && data[chatId].blocklist && data[chatId].blocklist.length) {
-    for (const bad of data[chatId].blocklist) {
+  if (txt && groupMenuData[chatId].blocklist && groupMenuData[chatId].blocklist.length) {
+    for (const bad of groupMenuData[chatId].blocklist) {
       if (!bad) continue
       try {
         if (txt.toLowerCase().includes(bad.toLowerCase())) {
@@ -4342,7 +4339,7 @@ bot.on("callback_query", async (q) => {
   const d = q.data
   if (d === "show_rules") {
     await bot.answerCallbackQuery(q.id)
-    await bot.sendMessage(chatId, `👥 Rules Grup:\n\n${data[chatId].rules}`)
+    await bot.sendMessage(chatId, `👥 Rules Grup:\n\n${groupMenuData[chatId].rules}`)
     return
   }
   if (d === "show_info") {
@@ -4355,13 +4352,13 @@ bot.on("callback_query", async (q) => {
     return
   }
   if (d === "welcome_on") {
-    data[chatId].welcome.enabled = true
+    groupMenuData[chatId].welcome.enabled = true
     await bot.answerCallbackQuery(q.id, { text: "Welcome Active" })
     await bot.sendMessage(chatId, "Welcome Active")
     return
   }
   if (d === "welcome_off") {
-    data[chatId].welcome.enabled = false
+    groupMenuData[chatId].welcome.enabled = false
     await bot.answerCallbackQuery(q.id, { text: "Welcome Non Active" })
     await bot.sendMessage(chatId, "Welcome Non Active")
     return
@@ -4369,27 +4366,27 @@ bot.on("callback_query", async (q) => {
   if (d.startsWith("clear_warn_")) {
     const parts = d.split("_")
     const uid = parseInt(parts[2], 10)
-    data[chatId].warns[uid] = 0
+    groupMenuData[chatId].warns[uid] = 0
     await bot.answerCallbackQuery(q.id, { text: "Warn direset" })
     await bot.sendMessage(chatId, "Warn user telah direset")
     return
   }
   if (d.startsWith("unwarn_")) {
     const uid = parseInt(d.split("_")[1], 10)
-    const cur = data[chatId].warns[uid] || 0
+    const cur = groupMenuData[chatId].warns[uid] || 0
     if (cur <= 0) {
       await bot.answerCallbackQuery(q.id, { text: "User tidak punya warn" })
       return
     }
-    data[chatId].warns[uid] = cur - 1
+    groupMenuData[chatId].warns[uid] = cur - 1
     await bot.answerCallbackQuery(q.id, { text: "Warn dikurangi" })
-    await bot.sendMessage(chatId, `Warn user berkurang (${data[chatId].warns[uid]}/3)`)
+    await bot.sendMessage(chatId, `Warn user berkurang (${groupMenuData[chatId].warns[uid]}/3)`)
     return
   }
   if (d.startsWith("delblock_")) {
     const raw = d.replace("delblock_", "")
     const word = decodeURIComponent(raw)
-    data[chatId].blocklist = (data[chatId].blocklist || []).filter(w => w !== word)
+    groupMenuData[chatId].blocklist = (groupMenuData[chatId].blocklist || []).filter(w => w !== word)
     await bot.answerCallbackQuery(q.id, { text: "Kata dihapus" })
     await bot.sendMessage(chatId, `${word} dihapus dari blocklist`)
     return
@@ -4408,7 +4405,7 @@ bot.onText(/^\/setrules(?:\s+(.+))?$/i, async (msg, match) => {
   ensure(chatId)
   const t = match && match[1] ? match[1].trim() : ""
   if (!t) return bot.sendMessage(chatId, "Gunakan: /setrules <rules>")
-  data[chatId].rules = t
+  groupMenuData[chatId].rules = t
   bot.sendMessage(chatId, "Rules Updated !")
 })
 
@@ -4419,12 +4416,12 @@ bot.onText(/^\/setwelcome(?:\s+(.+))?$/i, async (msg, match) => {
   if (!admin) return bot.sendMessage(chatId, "❌ ⵢ Anda Membutuhkan Akses Admin !")
   ensure(chatId)
   const textArg = match && match[1] ? match[1].trim() : null
-  if (textArg) data[chatId].welcome.text = textArg
+  if (textArg) groupMenuData[chatId].welcome.text = textArg
   if (msg.reply_to_message && msg.reply_to_message.photo) {
     const ph = msg.reply_to_message.photo
-    data[chatId].welcome.photo = ph[ph.length - 1].file_id
+    groupMenuData[chatId].welcome.photo = ph[ph.length - 1].file_id
   }
-  data[chatId].welcome.enabled = true
+  groupMenuData[chatId].welcome.enabled = true
   await bot.sendMessage(chatId, "Welcome Updated !", {
   })
 })
@@ -4432,8 +4429,8 @@ bot.onText(/^\/setwelcome(?:\s+(.+))?$/i, async (msg, match) => {
 bot.onText(/^\/welcome\s+(on|off)$/i, (msg, match) => {
   const chatId = msg.chat.id
   ensure(chatId)
-  data[chatId].welcome.enabled = match[1].toLowerCase() === "on"
-  bot.sendMessage(chatId, `Welcome ${data[chatId].welcome.enabled ? "Active !" : "Non Active !"}`)
+  groupMenuData[chatId].welcome.enabled = match[1].toLowerCase() === "on"
+  bot.sendMessage(chatId, `Welcome ${groupMenuData[chatId].welcome.enabled ? "Active !" : "Non Active !"}`)
 })
 
 bot.onText(/^\/addblocklist\s+(.+)$/i, async (msg, match) => {
@@ -4444,7 +4441,7 @@ bot.onText(/^\/addblocklist\s+(.+)$/i, async (msg, match) => {
   if (!admin) return bot.sendMessage(chatId, "❌ ⵢ Anda Membutuhkan Akses Admin !")
   const word = match[1].trim()
   if (!word) return bot.sendMessage(chatId, "Gunakan: /addblocklist <pesan>")
-  if (!data[chatId].blocklist.includes(word)) data[chatId].blocklist.push(word)
+  if (!groupMenuData[chatId].blocklist.includes(word)) groupMenuData[chatId].blocklist.push(word)
   bot.sendMessage(chatId, `${word} ditambahkan ke blocklist`, {
     reply_markup: { inline_keyboard: [[{ text: "Hapus kata", callback_data: "delblock_" + encodeURIComponent(word) }]] }
   })
@@ -4457,7 +4454,7 @@ bot.onText(/^\/delblocklist\s+(.+)$/i, async (msg, match) => {
   if (!admin) return bot.sendMessage(chatId, "❌ ⵢ Anda Membutuhkan Akses Admin !")
   ensure(chatId)
   const word = match[1].trim()
-  data[chatId].blocklist = (data[chatId].blocklist || []).filter(w => w !== word)
+  groupMenuData[chatId].blocklist = (groupMenuData[chatId].blocklist || []).filter(w => w !== word)
   bot.sendMessage(chatId, `${word} dihapus dari blocklist`)
 })
 
@@ -4467,7 +4464,7 @@ bot.onText(/^\/blocklist$/i, async (msg) => {
   const admin = await isAdmin(bot, chatId, fromId)
   if (!admin) return bot.sendMessage(chatId, "❌ ⵢ Anda Membutuhkan Akses Admin !")
   ensure(chatId)
-  const list = (data[chatId].blocklist || []).join("\n") || "Blocklist kosong"
+  const list = (groupMenuData[chatId].blocklist || []).join("\n") || "Blocklist kosong"
   bot.sendMessage(chatId, `📌 Blocklist:\n${list}`)
 })
 
@@ -4692,12 +4689,12 @@ bot.onText(/^\/warn$/i, async (msg) => {
   }
   ensure(chatId)
   const uid = reply.from.id
-  data[chatId].warns[uid] = (data[chatId].warns[uid] || 0) + 1
-  const cnt = data[chatId].warns[uid]
+  groupMenuData[chatId].warns[uid] = (groupMenuData[chatId].warns[uid] || 0) + 1
+  const cnt = groupMenuData[chatId].warns[uid]
   if (cnt >= 3) {
     try {
       await bot.kickChatMember(chatId, uid)
-      data[chatId].warns[uid] = 0
+      groupMenuData[chatId].warns[uid] = 0
       await bot.sendMessage(chatId, `${reply.from.first_name} dikick karena 3 warn`, { reply_markup: { inline_keyboard: [[{ text: "Unban", callback_data: "unban_" + uid }]] } })
     } catch { await bot.sendMessage(chatId, "Gagal kick") }
   } else {
@@ -4720,9 +4717,9 @@ bot.onText(/^\/unwarn$/i, async (msg) => {
   }
   ensure(chatId)
   const uid = reply.from.id
-  if (!data[chatId].warns[uid] || data[chatId].warns[uid] <= 0) return bot.sendMessage(chatId, "User tidak punya warn")
-  data[chatId].warns[uid] -= 1
-  await bot.sendMessage(chatId, `Warn berkurang (${data[chatId].warns[uid]}/3)`, { reply_markup: { inline_keyboard: [[{ text: "Remove Warn", callback_data: "clear_warn_" + uid }]] } })
+  if (!groupMenuData[chatId].warns[uid] || groupMenuData[chatId].warns[uid] <= 0) return bot.sendMessage(chatId, "User tidak punya warn")
+  groupMenuData[chatId].warns[uid] -= 1
+  await bot.sendMessage(chatId, `Warn berkurang (${groupMenuData[chatId].warns[uid]}/3)`, { reply_markup: { inline_keyboard: [[{ text: "Remove Warn", callback_data: "clear_warn_" + uid }]] } })
 })
 
 bot.onText(/^\/pin$/i, async (msg) => {
